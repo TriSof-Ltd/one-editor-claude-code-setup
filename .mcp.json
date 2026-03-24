@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "one-editor": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["/opt/one-editor-mcp/index.js"],
+      "env": {
+        "BRIDGE_URL": "http://localhost:8766"
+      }
+    }
+  }
+}

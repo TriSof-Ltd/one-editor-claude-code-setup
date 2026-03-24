@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "WebSearch",
+      "WebFetch(*)",
+      "mcp__one-editor__ask_user"
+    ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      { "matcher": "*", "hooks": [{ "type": "http", "url": "http://localhost:8766/hooks/UserPromptSubmit", "timeout": 10 }] }
+    ],
+    "PreToolUse": [
+      { "matcher": "*", "hooks": [{ "type": "http", "url": "http://localhost:8766/hooks/PreToolUse", "timeout": 10 }] }
+    ],
+    "PostToolUse": [
+      { "matcher": "*", "hooks": [{ "type": "http", "url": "http://localhost:8766/hooks/PostToolUse", "timeout": 10 }] }
+    ],
+    "PostToolUseFailure": [
+      { "matcher": "*", "hooks": [{ "type": "http", "url": "http://localhost:8766/hooks/PostToolUseFailure", "timeout": 10 }] }
+    ],
+    "Stop": [
+      { "matcher": "*", "hooks": [{ "type": "http", "url": "http://localhost:8766/hooks/Stop", "timeout": 10 }] }
+    ]
+  }
+}
