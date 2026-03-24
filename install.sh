@@ -18,6 +18,8 @@ mkdir -p "$PROJECT_DIR/.claude"
 cp -r .claude/skills "$PROJECT_DIR/.claude/" 2>/dev/null || true
 cp -r .claude/agents "$PROJECT_DIR/.claude/" 2>/dev/null || true
 cp -r .claude/rules "$PROJECT_DIR/.claude/" 2>/dev/null || true
+cp -r .claude/hooks "$PROJECT_DIR/.claude/" 2>/dev/null || true
+chmod +x "$PROJECT_DIR/.claude/hooks/"*.sh 2>/dev/null || true
 
 # Merge settings.local.json (don't overwrite if exists)
 if [ -f .claude/settings.local.json ]; then

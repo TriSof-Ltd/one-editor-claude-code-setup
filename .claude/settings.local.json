@@ -18,13 +18,17 @@
       { "matcher": "*", "hooks": [{ "type": "http", "url": "http://localhost:8766/hooks/PreToolUse", "timeout": 10 }] }
     ],
     "PostToolUse": [
-      { "matcher": "*", "hooks": [{ "type": "http", "url": "http://localhost:8766/hooks/PostToolUse", "timeout": 10 }] }
+      { "matcher": "*", "hooks": [{ "type": "http", "url": "http://localhost:8766/hooks/PostToolUse", "timeout": 10 }] },
+      { "matcher": "Edit|Write", "hooks": [{ "type": "command", "command": ".claude/hooks/post-edit.sh", "timeout": 30 }] }
     ],
     "PostToolUseFailure": [
       { "matcher": "*", "hooks": [{ "type": "http", "url": "http://localhost:8766/hooks/PostToolUseFailure", "timeout": 10 }] }
     ],
     "Stop": [
       { "matcher": "*", "hooks": [{ "type": "http", "url": "http://localhost:8766/hooks/Stop", "timeout": 10 }] }
+    ],
+    "PostCompact": [
+      { "matcher": "*", "hooks": [{ "type": "command", "command": ".claude/hooks/post-compact.sh" }] }
     ]
   }
 }
