@@ -8,6 +8,9 @@
       "WebSearch",
       "WebFetch(*)",
       "mcp__one-editor__ask_user"
+    ],
+    "deny": [
+      "AskUserQuestion"
     ]
   },
   "hooks": {
