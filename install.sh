@@ -21,13 +21,10 @@ cp -r .claude/rules "$PROJECT_DIR/.claude/" 2>/dev/null || true
 cp -r .claude/hooks "$PROJECT_DIR/.claude/" 2>/dev/null || true
 chmod +x "$PROJECT_DIR/.claude/hooks/"*.sh 2>/dev/null || true
 
-# Merge settings.local.json (don't overwrite if exists)
+# Always deploy settings.local.json (our settings are the source of truth)
 if [ -f .claude/settings.local.json ]; then
-  if [ -f "$PROJECT_DIR/.claude/settings.local.json" ]; then
-    echo "[setup] settings.local.json exists, skipping (merge manually if needed)"
-  else
-    cp .claude/settings.local.json "$PROJECT_DIR/.claude/settings.local.json"
-  fi
+  cp .claude/settings.local.json "$PROJECT_DIR/.claude/settings.local.json"
+  echo "[setup] settings.local.json updated"
 fi
 
 # Copy .mcp.json (don't overwrite)
