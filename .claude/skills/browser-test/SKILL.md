@@ -1,12 +1,12 @@
 ---
 name: browser-test
-description: Test the running web app in a real headless browser. Use after making UI changes, adding features, fixing bugs, or when the user asks to test/verify the app. Navigates pages, fills forms, checks console errors, network failures, and tracks results.
+description: End-to-end test the running web app in a real headless browser. Use after making UI changes, adding features, fixing bugs, or when the user asks to test/verify the app. Uses structured [OE] events from the console instead of screenshots.
 allowed-tools: Bash(playwright-cli:*)
 ---
 
-# Browser Test
+# Browser Test (E2E)
 
-Test the user's running web app using Playwright CLI in a real headless browser. Use this after code changes to verify everything works.
+Test the user's running web app using playwright-cli. The app instruments fetch, routing, and errors automatically — every action produces structured `[OE]` events in the console. Read those events to verify behavior. No screenshots needed.
 
 ## When to Use
 
@@ -19,167 +19,155 @@ Test the user's running web app using Playwright CLI in a real headless browser.
 
 ## Prerequisites
 
-The Vite dev server must be running at `http://localhost:5345`. Check with `pm2 list` — look for the `*-client` process. If it's not running, start it first.
+The Vite dev server must be running at `http://localhost:5345`. Check with `pm2 list`.
+
+## How It Works
+
+The app's `index.html` automatically patches `fetch`, `XMLHttpRequest`, `history.pushState`, `window.onerror`, and `unhandledrejection`. Every event is:
+1. Logged to console as `[OE] {"t":"fetch","m":"POST","u":"/api/notes","s":201,...}`
+2. Stored in `window.__oe` array for batch reading
+
+After each interaction, read new events with:
+```bash
+playwright-cli eval "JSON.stringify(window.__oe.splice(0))"
+```
+This reads AND clears the buffer — you only get events since the last read.
+
+## Event Types
+
+| `t` value | Meaning | Key fields |
+|-----------|---------|------------|
+| `fetch` | API call completed | `m`=method, `u`=url, `s`=status, `d`=duration_ms, `ok`, `b`=body preview |
+| `fetch_err` | API call failed (network) | `m`, `u`, `err`=error message |
+| `xhr` | XMLHttpRequest completed | same as fetch |
+| `xhr_err` | XMLHttpRequest failed | same as fetch_err |
+| `route` | Navigation occurred | `from`=/old/path, `to`=/new/path |
+| `error` | Uncaught JS error | `msg`, `src`=file:line, `stack` |
+| `rejection` | Unhandled promise rejection | `msg`, `stack` |
 
 ## Testing Workflow
 
-### Step 1: Open the browser and navigate
+### Step 1: Open and check initial load
 
 ```bash
 playwright-cli open http://localhost:5345
+playwright-cli eval "JSON.stringify(window.__oe.splice(0))"
 ```
 
-The browser runs headless by default (no `--headless` flag needed).
+Check: any `t:"error"` or `t:"rejection"`? Any `t:"fetch"` with `ok:false`?
 
-### Step 2: Take a snapshot to see what rendered
+### Step 2: Interact and verify
 
 ```bash
-playwright-cli snapshot
+playwright-cli snapshot                    # find element refs
+playwright-cli click e12                   # interact
+playwright-cli eval "JSON.stringify(window.__oe.splice(0))"   # what happened?
 ```
 
-Read the snapshot YAML file to see element refs (e.g., `e5`, `e12`). Only read when you need to find elements.
+After clicking a "Create" button, you should see:
+```json
+[{"t":"fetch","m":"POST","u":"/api/notes","s":201,"d":89,"ok":true,"b":"{\"id\":5}"},
+ {"t":"route","from":"/notes","to":"/notes/5"}]
+```
 
-### Step 3: Check for console errors
+### Step 3: Check for backend errors
+
+If any fetch shows `s:500` or `ok:false`, check the Express server logs:
 
 ```bash
-playwright-cli console
+pm2 logs $(pm2 jlist | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const l=JSON.parse(d);const s=l.find(p=>p.name.endsWith('-server'));console.log(s?s.name:'dev-server')})") --err --lines 30 --nostream 2>&1
 ```
 
-Look for JavaScript errors, unhandled rejections, failed imports. Fix any errors found.
+Look for stack traces, database errors, unhandled rejections.
 
-### Step 4: Check for network failures
-
-```bash
-playwright-cli network
-```
-
-Look for 4xx/5xx status codes, failed fetch requests, CORS errors.
-
-### Step 5: Test interactions
-
-Use element refs from the snapshot:
-
-```bash
-playwright-cli click e12
-playwright-cli fill e8 "test@example.com"
-playwright-cli fill e9 "password123"
-playwright-cli click e15
-playwright-cli snapshot   # check result
-```
-
-### Step 6: Test edge cases (adversarial testing)
+### Step 4: Test edge cases (adversarial)
 
 Try to break the app:
-- Submit empty forms
-- Enter invalid data (wrong email format, special characters, very long strings)
-- Double-click submit buttons rapidly
-- Navigate away and back
-- Test with no network data (empty states)
-- Click elements that should be disabled
-- Type very long strings (1000+ characters)
-- Use special characters in inputs (<script>, ', ", &, etc.)
+- Submit empty forms → check for validation errors (NOT 500s)
+- Enter `<script>alert(1)</script>` in text fields → check XSS handling
+- Enter very long strings (1000+ chars)
+- Double-click submit buttons rapidly → check for duplicate submissions
+- Navigate directly to protected routes without auth
+- Navigate to non-existent routes → should show 404, not crash
 
-### Step 7: Test navigation/routing
+### Step 5: Test all routes
 
 ```bash
-playwright-cli goto http://localhost:5345/about
-playwright-cli snapshot
-playwright-cli go-back
-playwright-cli snapshot
+playwright-cli goto http://localhost:5345/dashboard
+playwright-cli eval "JSON.stringify(window.__oe.splice(0))"
+playwright-cli goto http://localhost:5345/settings
+playwright-cli eval "JSON.stringify(window.__oe.splice(0))"
 ```
 
-Test all routes. Verify direct URL access works (not just link clicks).
+Every route should: load without errors, make correct API calls, show expected content.
 
-### Step 8: Take a screenshot if needed
-
-```bash
-playwright-cli screenshot
-```
-
-Only when visual verification is needed. Screenshots cost more tokens than snapshots.
-
-### Step 9: Close when done
+### Step 6: Close
 
 ```bash
 playwright-cli close
 ```
 
-Always close to free RAM (~120MB).
+Always close to free RAM.
 
-## Tracking Results
+## Decision Rules
 
-After testing, write findings to `test-results.md` in the project root:
-
-```markdown
-## Test Run — [date and time]
-
-### Page Load
-- [PASS] Home page renders correctly
-- [FAIL] Console error: "Cannot read property 'map' of undefined" in Dashboard.tsx
-  - Fixed: Added null check on line 42
-  - Retested: PASS
-
-### Forms
-- [PASS] Login form submits with valid data
-- [FAIL] No validation error on empty email
-  - Fixed: Added required attribute
-  - Retested: PASS
-
-### Navigation
-- [PASS] All routes render without errors
-- [PASS] Back/forward navigation works
-
-### Edge Cases
-- [PASS] Empty form submission shows errors
-- [FAIL] Double-click creates duplicate entries
-  - Fixed: Added loading state to disable button
-  - Retested: PASS
-
-### Console Errors: 0
-### Network Failures: 0
-```
+| Event | Verdict | Action |
+|-------|---------|--------|
+| `fetch` with `ok:true` | PASS | Continue |
+| `fetch` with `s:400` | Check | Expected validation error? If yes: PASS. If no: fix. |
+| `fetch` with `s:401/403` | Check | Expected auth error? If yes: PASS. If no: fix auth. |
+| `fetch` with `s:500` | FAIL | Check pm2 logs, fix backend, retest |
+| `fetch_err` (network) | FAIL | Server down? Check pm2 status |
+| `error` or `rejection` | FAIL | Fix the JS error, retest |
+| `route` change | INFO | Verify it went to the right place |
+| No events after action | WARN | Action may not have triggered anything — use snapshot to verify DOM |
 
 ## Fix-and-Retest Loop
 
-When you find an issue:
-1. Note it in test-results.md as [FAIL]
+1. Note the failure in test-results.md
 2. Fix the code
-3. Wait 2 seconds for HMR to rebuild
-4. Retest the specific failing scenario
-5. Update test-results.md with the fix and retest result
-6. Maximum 3 fix attempts per issue before marking as known issue
+3. Wait 2s for HMR to rebuild
+4. `playwright-cli eval "window.__oe.splice(0)"` — clear stale events
+5. Retest the specific scenario
+6. Update test-results.md
 
-## Resource Notes
+## Tracking Results
 
-- Browser runs headless by default — no flags needed
-- Always `playwright-cli close` when done (frees ~120MB RAM)
-- Prefer `snapshot` over `screenshot` (10x fewer tokens)
-- Don't keep the browser open between separate tasks
-- One browser session per test run
-- If browser seems stuck, run `playwright-cli close` then re-open
+Write to `test-results.md` in the project root:
+
+```markdown
+## E2E Test — [date]
+
+### Page Load: /
+- [PASS] No JS errors
+- [PASS] GET /api/health → 200 (45ms)
+
+### Create Note
+- [PASS] POST /api/notes → 201 (89ms)
+- [PASS] Route changed to /notes/5
+
+### Delete Note
+- [FAIL] DELETE /api/notes/5 → 500 (12ms)
+  - Backend: "relation notes does not exist"
+  - Fixed: ran migration
+  - Retested: PASS
+
+### Edge Cases
+- [PASS] Empty form → 400 validation error (not 500)
+- [PASS] XSS input sanitized
+- [PASS] Direct /admin route → redirected to /auth/signin
+```
 
 ## Commands Quick Reference
 
 | Command | Purpose |
 |---------|---------|
 | `open URL` | Launch browser and navigate |
-| `snapshot` | Accessibility tree (structured, cheap) |
-| `screenshot` | Visual capture (expensive, use sparingly) |
+| `eval "JS"` | Run JavaScript, read `window.__oe` |
+| `snapshot` | DOM accessibility tree (find element refs) |
 | `click REF` | Click element |
-| `dblclick REF` | Double-click element |
-| `fill REF "text"` | Clear input and type text |
-| `type REF "text"` | Type text without clearing first |
-| `hover REF` | Hover over element |
-| `select REF "value"` | Select dropdown option |
-| `check REF` / `uncheck REF` | Toggle checkbox |
-| `console` | Show console log/warn/error |
-| `network` | Show network requests |
+| `fill REF "text"` | Fill input |
+| `console` | Full console output (alternative to eval) |
 | `goto URL` | Navigate to URL |
-| `go-back` / `go-forward` | Browser history navigation |
-| `reload` | Refresh page |
-| `close` | Close browser and free RAM |
-| `press KEY` | Press keyboard key (Enter, Tab, Escape) |
-| `eval "js code"` | Run JavaScript on the page |
-| `upload REF "path"` | Upload file to file input |
-| `resize W H` | Change viewport size |
-| `run-code "code"` | Run Playwright code snippet |
+| `go-back` | Browser back |
+| `close` | Close browser, free RAM |
