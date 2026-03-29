@@ -41,7 +41,6 @@ This reads AND clears the buffer — you only get events since the last read.
 | `fetch_err` | API call failed (network) | `m`, `u`, `err`=error message |
 | `xhr` | XMLHttpRequest completed | same as fetch |
 | `xhr_err` | XMLHttpRequest failed | same as fetch_err |
-| `route` | Navigation occurred | `from`=/old/path, `to`=/new/path |
 | `error` | Uncaught JS error | `msg`, `src`=file:line, `stack` |
 | `rejection` | Unhandled promise rejection | `msg`, `stack` |
 
@@ -119,8 +118,9 @@ Always close to free RAM.
 | `fetch` with `s:500` | FAIL | Check pm2 logs, fix backend, retest |
 | `fetch_err` (network) | FAIL | Server down? Check pm2 status |
 | `error` or `rejection` | FAIL | Fix the JS error, retest |
-| `route` change | INFO | Verify it went to the right place |
 | No events after action | WARN | Action may not have triggered anything — use snapshot to verify DOM |
+
+**Route changes**: Vite resets JS context on SPA navigation, so route events don't appear in `__oe`. Instead, check the `Page URL:` line that playwright-cli prints after every interaction.
 
 ## Fix-and-Retest Loop
 
