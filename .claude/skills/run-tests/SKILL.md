@@ -1,93 +1,50 @@
 ---
 name: run-tests
-description: Triggered when the user clicks "Run Tests". Analyze all changes since last test run, write missing unit and E2E tests, run them, fix failures, and update tests/tracking.json.
-allowed-tools: Bash, Read, Write, Edit, Bash(playwright-cli:*)
+description: Run all unit tests. Triggered by "Run Unit Tests" button. Runs vitest, reports results, fixes failures.
+allowed-tools: Bash, Read, Write, Edit
 ---
 
-# Run Tests
+# Run Unit Tests
 
-This skill is triggered when the user clicks the "Run Tests" button. Your job: ensure all recent code changes have test coverage, all tests pass, and results are tracked.
+Run all backend unit tests and report results.
 
-## Step 1: Determine what changed
-
-```bash
-# Read last tested commit
-cat tests/tracking.json 2>/dev/null | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{console.log(JSON.parse(d).lastTestedCommit)}catch{console.log('none')}})"
-
-# See commits since then
-git log --oneline <lastTestedCommit>..HEAD
-
-# See changed files
-git diff --name-only <lastTestedCommit>..HEAD
-```
-
-If no tracking exists, analyze all code.
-
-## Step 2: Write missing unit tests
-
-For each changed file in `server/api/routes/`:
-- Check if `server/api/__tests__/<name>.test.ts` exists
-- If not, create it using the setup helper:
-
-```typescript
-import { describe, it, expect } from 'vitest'
-import { createTestApp, request } from './setup'
-const app = createTestApp()
-
-describe('ROUTE endpoints', () => {
-  it('returns 401 without auth', ...)
-  it('returns 400 with invalid input', ...)
-  it('returns 200/201 with valid input', ...)
-  it('returns 404 for missing resource', ...)
-})
-```
-
-## Step 3: Run unit tests
+## Step 1: Run tests
 
 ```bash
-cd server && npm run test:run 2>&1
+cd server && npx vitest run --reporter=verbose 2>&1
 ```
 
-If failures: analyze, fix, rerun. Max 3 attempts.
+## Step 2: Handle results
 
-## Step 4: Run E2E tests (if frontend changed)
+If all pass: report total count and "All unit tests passed."
 
-Check if any `src/` files changed. If yes:
+If any fail:
+1. Read the failing test file and the source it tests
+2. Determine if the bug is in the source code or the test
+3. Fix it
+4. Re-run: `cd server && npx vitest run --reporter=verbose 2>&1`
+5. Max 3 fix attempts
+
+## Step 3: Check for missing tests
 
 ```bash
-playwright-cli open http://localhost:5345
-playwright-cli eval "JSON.stringify(window.__oe.splice(0))"
-# Navigate to affected pages, interact, check events
-playwright-cli close
+# Find server routes/services without test files
+ls server/api/routes/ server/api/services/ 2>/dev/null
+ls server/api/__tests__/ 2>/dev/null
 ```
 
-Look for `t:"error"`, `t:"rejection"`, or `t:"fetch"` with `ok:false`.
+For any testable file without a test:
+- Create `server/api/__tests__/<name>.test.ts`
+- Test: auth (401), validation (400), happy path (200/201), not found (404)
+- Use vitest (`describe`, `it`, `expect`)
 
-## Step 5: Update tracking
-
-Create/update `tests/tracking.json`:
-
-```json
-{
-  "lastTestRun": "2026-03-28T...",
-  "lastTestedCommit": "<HEAD hash>",
-  "unitTests": { "total": N, "passed": N, "failed": N },
-  "e2eTests": { "total": N, "passed": N, "failed": N },
-  "status": "pass"
-}
-```
-
-## Step 6: Commit test files
+## Step 4: Commit new tests
 
 ```bash
-git add tests/ server/api/__tests__/
-git commit -m "Add/update tests for recent changes"
+git add server/api/__tests__/
+git diff --cached --quiet || git commit -m "Add missing unit tests"
 ```
 
-## Step 7: Report
+## Step 5: Report
 
-Tell the user exactly:
-- How many unit tests written/run
-- How many E2E checks performed
-- Pass/fail status
-- Any issues that could not be auto-fixed
+Summary: N total tests, N passed, N failed. List any that couldn't be fixed.
