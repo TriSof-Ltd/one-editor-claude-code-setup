@@ -27,6 +27,13 @@ tests: Add dashboard e2e tests
 tests: Remove obsolete settings e2e tests
 ```
 
+## Before EVERY commit — MANDATORY build check
+Before running `git commit`, you MUST:
+1. Run `npm run build 2>&1 | tail -5` — must show "built in" (Vite success)
+2. Run `cd server && npm run build 2>&1` — must exit without errors
+3. If either fails: FIX the error, then try committing again
+4. NEVER commit code that doesn't build
+
 ## Important
 - Normal commits trigger an automatic E2E test evaluation (a separate Claude instance checks if e2e tests need updating).
 - Tests commits do NOT trigger E2E evaluation (prevents infinite loops).
