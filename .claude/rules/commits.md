@@ -7,7 +7,7 @@
 
 ## Commit Types
 
-Every commit you make is one of two types:
+Every commit you make is one of three types:
 
 ### Normal commits
 Feature work, bug fixes, refactors — any code change plus its unit tests.
@@ -15,16 +15,21 @@ Feature work, bug fixes, refactors — any code change plus its unit tests.
 Add user dashboard page
 Fix login redirect bug
 Refactor auth middleware to use JWT
-Add settings API endpoints
 ```
 
 ### Tests commits
-E2E test updates ONLY. These are created by the automated E2E testing system.
-Prefix with `tests:` so the system knows not to re-trigger E2E checks.
+E2E/unit test updates ONLY. Created by the automated testing system.
+Prefix with `tests:` — does NOT trigger evaluator.
 ```
 tests: Update auth e2e tests for new login flow
 tests: Add dashboard e2e tests
-tests: Remove obsolete settings e2e tests
+```
+
+### Sprint commits
+Sprint contract creation/updates. Prefix with `sprint:` — does NOT trigger evaluator.
+```
+sprint: Contract for user dashboard
+sprint: Update contract outcome for auth feature
 ```
 
 ## Before EVERY commit — MANDATORY build check

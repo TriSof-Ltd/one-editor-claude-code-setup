@@ -5,8 +5,10 @@ If a PLAN.md file exists in the project root:
 ## Before Starting Work
 1. Read PLAN.md first — understand the full plan before touching code
 2. Identify which phase you're in and which tasks are next
-3. Follow the architecture decisions (database schema, API routes, components)
-4. Follow the build order — don't skip ahead to later phases
+3. Write a sprint contract to `.claude/sprint-contract.md` before building each feature (see sprint-contracts.md)
+4. Follow the architecture decisions (database schema, API routes, components)
+5. Follow the build order — don't skip ahead to later phases
+6. Check if `.claude/evaluator-feedback.md` exists — if so, address that feedback FIRST before continuing
 
 ## While Working
 5. Work through checkboxes in order within each phase
