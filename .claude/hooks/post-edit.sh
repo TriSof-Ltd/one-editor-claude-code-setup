@@ -27,7 +27,7 @@ if [[ "$EXT" =~ ^(ts|tsx|js|jsx|mjs|cjs)$ ]]; then
   BYTE_COUNT=$(wc -c < "$FILE_PATH" 2>/dev/null)
   # If file has < 5 lines but > 200 bytes, likely has literal \n
   if [ "$LINE_COUNT" -lt 5 ] && [ "$BYTE_COUNT" -gt 200 ]; then
-    if grep -qP '\\n' "$FILE_PATH" 2>/dev/null; then
+    if grep -qF '\n' "$FILE_PATH" 2>/dev/null; then
       # Fix: replace literal \n with actual newlines
       sed -i 's/\\n/\n/g' "$FILE_PATH"
     fi

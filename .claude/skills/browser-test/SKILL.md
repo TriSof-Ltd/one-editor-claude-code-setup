@@ -65,13 +65,14 @@ playwright-cli eval "JSON.stringify(window.__oe.splice(0))"   # what happened?
 
 After clicking a "Create" button, you should see:
 ```json
-[{"t":"fetch","m":"POST","u":"/api/notes","s":201,"d":89,"ok":true,"b":"{\"id\":5}"},
- {"t":"route","from":"/notes","to":"/notes/5"}]
+[{"t":"fetch","m":"POST","u":"/api/notes","s":201,"d":89,"ok":true,"b":"{\"id\":5}"}]
 ```
+
+Note: Route changes don't appear in `__oe` — Vite resets JS context on SPA navigation. Check the `Page URL:` line that playwright-cli prints after interactions to verify navigation.
 
 ### Step 3: Check for backend errors
 
-If any fetch shows `s:500` or `ok:false`, check the Express server logs:
+If any fetch shows `s:500` or `ok:false`, check the server logs:
 
 ```bash
 pm2 logs $(pm2 jlist | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const l=JSON.parse(d);const s=l.find(p=>p.name.endsWith('-server'));console.log(s?s.name:'dev-server')})") --err --lines 30 --nostream 2>&1

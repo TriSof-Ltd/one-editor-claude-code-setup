@@ -55,7 +55,7 @@ Based on the commit changes and existing tests:
 
 E2E test files live in `tests/e2e/` with naming: `<feature>.e2e.ts`
 
-Each file exports a structured test definition:
+Each file exports a structured test definition describing what to test. You execute the steps using `playwright-cli` commands:
 
 ```typescript
 // tests/e2e/auth.e2e.ts
@@ -65,23 +65,25 @@ export default {
     {
       name: 'Login with email',
       steps: [
-        'goto http://localhost:5345/auth/signin',
-        'fill #email "test@example.com"',
-        'fill #password "TestPass123!"',
-        'click button[type=submit]',
-        'wait 2000',
-        'check no_errors',
-        'check url_contains /dashboard',
+        // Use playwright-cli commands:
+        // playwright-cli goto http://localhost:5345/auth/signin
+        // playwright-cli snapshot  (to find element refs)
+        // playwright-cli fill <ref> "test@example.com"
+        // playwright-cli click <ref>
+        // playwright-cli eval "JSON.stringify(window.__oe.splice(0))"
+        // Check output for t:"error" or t:"rejection"
+        'Navigate to /auth/signin',
+        'Fill email and password fields',
+        'Click sign in button',
+        'Verify: no errors in __oe events, page navigates to /dashboard',
       ],
     },
     {
       name: 'Sign up flow',
       steps: [
-        'goto http://localhost:5345/auth/signup',
-        'fill #email "newuser@example.com"',
-        'fill #password "TestPass123!"',
-        'fill #confirmPassword "TestPass123!"',
-        'click button[type=submit]',
+        'Navigate to /auth/signup',
+        'Fill email, password, confirm password',
+        'Click sign up button',
         'wait 2000',
         'check no_errors',
       ],

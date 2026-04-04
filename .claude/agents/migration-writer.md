@@ -1,7 +1,7 @@
 ---
 name: migration-writer
 description: Creates Supabase database migration files. Use when schema changes are needed — new tables, columns, indexes, RLS policies, or functions.
-tools: Read, Write, Glob, Grep
+tools: Read, Write, Glob, Grep, Bash
 model: sonnet
 ---
 
