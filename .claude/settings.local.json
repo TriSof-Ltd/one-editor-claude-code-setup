@@ -1,5 +1,6 @@
 {
   "enableAllProjectMcpServers": true,
+  "autoMemoryEnabled": true,
   "permissions": {
     "allow": [
       "Bash(*)",
