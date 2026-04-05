@@ -1,8 +1,11 @@
 
 
-## What This App Is
+## Project Context
 
-Read the project plan for full details on what you're building:
+Full product vision and scope:
+@scope.md
+
+Current sprint and tasks:
 @PLAN.md
 
 ## User Interaction

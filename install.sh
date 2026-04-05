@@ -35,14 +35,15 @@ fi
 # Update CLAUDE.md additions
 # Remove old additions section and re-append the latest version
 if [ -f CLAUDE.additions.md ] && [ -f "$PROJECT_DIR/CLAUDE.md" ]; then
-  # Check if we need to update (old format had "## Project Plan", new has "@PLAN.md")
-  if grep -q "@PLAN.md" "$PROJECT_DIR/CLAUDE.md" 2>/dev/null; then
+  # Check if we need to update — look for latest marker (@scope.md)
+  if grep -q "@scope.md" "$PROJECT_DIR/CLAUDE.md" 2>/dev/null; then
     echo "[setup] CLAUDE.md already up to date"
-  elif grep -q "## User Interaction" "$PROJECT_DIR/CLAUDE.md" 2>/dev/null; then
-    # Remove old additions (from "## User Interaction" to end of file) and re-append
+  elif grep -q "## User Interaction\|## Project Plan\|## Project Context\|## What This App Is" "$PROJECT_DIR/CLAUDE.md" 2>/dev/null; then
+    # Remove ALL old additions and re-append latest
     sed -i '/^## User Interaction$/,$d' "$PROJECT_DIR/CLAUDE.md"
-    # Also remove old "## Project Plan" section if present
     sed -i '/^## Project Plan$/,$d' "$PROJECT_DIR/CLAUDE.md"
+    sed -i '/^## Project Context$/,$d' "$PROJECT_DIR/CLAUDE.md"
+    sed -i '/^## What This App Is$/,$d' "$PROJECT_DIR/CLAUDE.md"
     cat CLAUDE.additions.md >> "$PROJECT_DIR/CLAUDE.md"
     echo "[setup] CLAUDE.md updated (replaced old additions)"
   else

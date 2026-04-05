@@ -1,30 +1,39 @@
-# Plan Reference Rules
+# Plan & Scope Rules
 
-If a PLAN.md file exists in the project root:
+This project uses two files to track what to build:
+
+- **scope.md** (project root) — The full product vision. Everything this app should eventually become. Updated when the user's vision evolves.
+- **PLAN.md** (project root) — The current sprint. What to build RIGHT NOW. Gets checked off as work completes. When done, pull the next phase from scope.md.
 
 ## Before Starting Work
-1. Read PLAN.md first — understand the full plan before touching code
-2. Identify which phase you're in and which tasks are next
-3. Write a sprint contract to `.claude/sprint-contract.md` before building each feature (see sprint-contracts.md)
-4. Follow the architecture decisions (database schema, API routes, components)
-5. Follow the build order — don't skip ahead to later phases
-6. Check if `.claude/evaluator-feedback.md` exists — if so, address that feedback FIRST before continuing
+
+1. Read `scope.md` first — understand the full product vision
+2. Read `PLAN.md` — identify which tasks are current
+3. If PLAN.md is empty or all checked off, pull the next phase from scope.md into PLAN.md
+4. Write a sprint contract to `.claude/sprint-contract.md` before building each feature
+5. Check if `.claude/evaluator-feedback.md` exists — address that feedback FIRST
 
 ## While Working
-5. Work through checkboxes in order within each phase
-6. After completing a task, update PLAN.md: change `- [ ]` to `- [x]`
-7. Run the **Verify** step at the end of each phase before moving to the next
-8. If a verify step fails, fix the issue before proceeding
 
-## When Things Change
-9. If the user requests something that conflicts with the plan, ask which to follow
-10. If requirements change, update PLAN.md sections (don't just ignore the plan)
-11. If you discover something the plan missed, add it as a new checkbox in the right phase
+6. Work through PLAN.md checkboxes in order
+7. After completing a task, mark it done: `- [ ]` → `- [x]`
+8. Keep commits small and focused
+9. Verify each feature works before moving to the next
+
+## When the User Changes Direction
+
+10. If the user describes new features or changes the vision → update `scope.md`
+11. If the change affects current work → also update `PLAN.md`
+12. If the user says "actually make it X instead of Y" → update scope.md with the new direction
+13. Always confirm: "I've updated the scope. Should I continue with the current plan or reprioritize?"
+
+## When PLAN.md is Complete
+
+14. Check scope.md for the next phase
+15. Create a new PLAN.md with the next set of tasks
+16. Tell the user what you're building next
 
 ## Out of Scope
-12. If the user asks for something listed in "Out of Scope", point it out and confirm they want it
-13. Don't add features that aren't in the plan unless the user explicitly asks
 
-## Commits
-14. Follow the Commit Strategy section — commit after each logical chunk
-15. Don't make one giant commit at the end
+17. If the user asks for something not in scope.md, ask if they want to add it to the scope
+18. Don't add features that aren't in scope unless the user explicitly asks
