@@ -69,8 +69,8 @@ mkdir -p .claude
 
 } > "$HANDOFF_FILE" 2>/dev/null
 
-# Signal the bridge to perform a context reset
-curl -s -X POST http://localhost:8766/hooks/context_reset \
+# Signal the bridge to perform a context reset (5s timeout to avoid blocking)
+curl -s --max-time 5 -X POST http://localhost:8766/hooks/context_reset \
   -H "Content-Type: application/json" \
   -d '{"reason":"compaction"}' 2>/dev/null || true
 

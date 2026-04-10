@@ -33,7 +33,7 @@
       { "matcher": "*", "hooks": [{ "type": "http", "url": "http://localhost:8766/hooks/Stop", "timeout": 10 }] }
     ],
     "PostCompact": [
-      { "matcher": "*", "hooks": [{ "type": "command", "command": ".claude/hooks/post-compact.sh" }] }
+      { "matcher": "*", "hooks": [{ "type": "command", "command": ".claude/hooks/post-compact.sh", "timeout": 15 }] }
     ]
   }
 }
