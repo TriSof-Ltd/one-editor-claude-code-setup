@@ -4,6 +4,8 @@
 
 set -e
 
+SETUP_VERSION="1.0.0"
+
 # Resolve script directory so we can use it regardless of cwd
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -33,8 +35,8 @@ if [ -f "$SCRIPT_DIR/.claude/settings.local.json" ]; then
   echo "[setup] settings.local.json updated"
 fi
 
-# Copy .mcp.json (don't overwrite)
-if [ -f "$SCRIPT_DIR/.mcp.json" ] && [ ! -f "$PROJECT_DIR/.mcp.json" ]; then
+# Copy .mcp.json (always update to latest)
+if [ -f "$SCRIPT_DIR/.mcp.json" ]; then
   cp "$SCRIPT_DIR/.mcp.json" "$PROJECT_DIR/.mcp.json"
 fi
 
@@ -67,4 +69,7 @@ if [ -f "$SCRIPT_DIR/CLAUDE.additions.md" ] && [ -f "$PROJECT_DIR/CLAUDE.md" ]; 
   fi
 fi
 
-echo "[setup] Done"
+# Write version marker for tracking
+echo "$SETUP_VERSION" > "$PROJECT_DIR/.claude/.setup-version"
+
+echo "[setup] Done (v$SETUP_VERSION)"
