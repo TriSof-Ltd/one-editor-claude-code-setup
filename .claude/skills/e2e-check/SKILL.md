@@ -96,8 +96,14 @@ export default {
 
 For each test file, execute the steps using playwright-cli:
 
+First determine the dev server port:
 ```bash
-playwright-cli open http://localhost:5345
+# Read port from PM2 or default to 5345
+DEV_PORT=$(pm2 jlist 2>/dev/null | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));const p=d.find(x=>x.name.endsWith('-client'));console.log(p?.pm2_env?.PORT||5345)" 2>/dev/null || echo 5345)
+```
+
+```bash
+playwright-cli open http://localhost:$DEV_PORT
 ```
 
 For each test:
