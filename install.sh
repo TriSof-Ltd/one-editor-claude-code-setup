@@ -19,14 +19,37 @@ fi
 echo "[setup] Installing Claude Code config into $PROJECT_DIR"
 
 # Copy .claude directory (skills, agents, rules, hooks)
+# Note: b44-* skills/agents are excluded — they're only installed for Base44 imports
 mkdir -p "$PROJECT_DIR/.claude"
-for dir in skills agents rules hooks; do
+for dir in rules hooks; do
   if [ -d "$SCRIPT_DIR/.claude/$dir" ]; then
     cp -r "$SCRIPT_DIR/.claude/$dir" "$PROJECT_DIR/.claude/"
   else
     echo "[setup] Warning: $SCRIPT_DIR/.claude/$dir not found, skipping"
   fi
 done
+# Copy skills excluding b44-* (Base44 import skills)
+if [ -d "$SCRIPT_DIR/.claude/skills" ]; then
+  mkdir -p "$PROJECT_DIR/.claude/skills"
+  for skill_dir in "$SCRIPT_DIR/.claude/skills"/*/; do
+    skill_name="$(basename "$skill_dir")"
+    case "$skill_name" in
+      b44-*) ;; # Skip Base44 import skills
+      *) cp -r "$skill_dir" "$PROJECT_DIR/.claude/skills/" ;;
+    esac
+  done
+fi
+# Copy agents excluding b44-* (Base44 import agents)
+if [ -d "$SCRIPT_DIR/.claude/agents" ]; then
+  mkdir -p "$PROJECT_DIR/.claude/agents"
+  for agent_file in "$SCRIPT_DIR/.claude/agents"/*.md; do
+    agent_name="$(basename "$agent_file")"
+    case "$agent_name" in
+      b44-*) ;; # Skip Base44 import agents
+      *) cp "$agent_file" "$PROJECT_DIR/.claude/agents/" ;;
+    esac
+  done
+fi
 chmod +x "$PROJECT_DIR/.claude/hooks/"*.sh 2>/dev/null || true
 
 # Always deploy settings.local.json (source of truth)
