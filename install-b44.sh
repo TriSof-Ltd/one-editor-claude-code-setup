@@ -27,5 +27,10 @@ for agent_file in "$SCRIPT_DIR/.claude/agents"/b44-*.md; do
   [ -f "$agent_file" ] && cp "$agent_file" "$PROJECT_DIR/.claude/agents/"
 done
 
-echo "[b44-setup] Done — installed b44-analyze, b44-scope, b44-schema, b44-backend, b44-frontend, b44-seed, b44-test skills"
-echo "[b44-setup] Run /b44-analyze to start the conversion"
+# Copy b44-* rules
+mkdir -p "$PROJECT_DIR/.claude/rules"
+for rule_file in "$SCRIPT_DIR/.claude/rules"/b44-*.md; do
+  [ -f "$rule_file" ] && cp "$rule_file" "$PROJECT_DIR/.claude/rules/"
+done
+
+echo "[b44-setup] Done — installed b44 skills, agents, and rules"
